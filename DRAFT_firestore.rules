@@ -1,0 +1,284 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Safety Net (Default-Deny)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Hardened Global Helpers
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    // Entity Validation Blueprints
+    function isValidCloudSave(data) {
+      return data.keys().hasAll([
+        'uid',
+        'shopName',
+        'playerName',
+        'revision',
+        'walletSeq',
+        'level',
+        'day',
+        'saveData',
+        'createdAt',
+        'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'uid',
+        'shopName',
+        'playerName',
+        'revision',
+        'walletSeq',
+        'level',
+        'day',
+        'saveData',
+        'createdAt',
+        'updatedAt'
+      ]) &&
+      data.uid is string && data.uid.size() >= 1 && data.uid.size() <= 128 && data.uid.matches('^[a-zA-Z0-9_\\-]+$') &&
+      data.uid == request.auth.uid &&
+      data.shopName is string && data.shopName.size() >= 1 && data.shopName.size() <= 80 &&
+      data.playerName is string && data.playerName.size() >= 1 && data.playerName.size() <= 80 &&
+      data.revision is number && data.revision >= 0 &&
+      data.walletSeq is number && data.walletSeq >= 0 &&
+      data.level is number && data.level >= 1 && data.level <= 200 &&
+      data.day is number && data.day >= 1 &&
+      data.saveData is map &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    function isValidPublicShop(data) {
+      return data.keys().hasAll([
+        'uid',
+        'shopName',
+        'playerName',
+        'level',
+        'xpTotal',
+        'day',
+        'money',
+        'fame',
+        'decor',
+        'likes',
+        'skinScore',
+        'skinCount',
+        'houseLevel',
+        'snapshot',
+        'createdAt',
+        'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'uid',
+        'shopName',
+        'playerName',
+        'level',
+        'xpTotal',
+        'day',
+        'money',
+        'fame',
+        'decor',
+        'likes',
+        'skinScore',
+        'skinCount',
+        'houseLevel',
+        'snapshot',
+        'createdAt',
+        'updatedAt'
+      ]) &&
+      data.uid is string && data.uid.size() >= 1 && data.uid.size() <= 128 && data.uid.matches('^[a-zA-Z0-9_\\-]+$') &&
+      data.shopName is string && data.shopName.size() >= 1 && data.shopName.size() <= 80 &&
+      data.playerName is string && data.playerName.size() >= 1 && data.playerName.size() <= 80 &&
+      data.level is number && data.level >= 1 && data.level <= 200 &&
+      data.xpTotal is number && data.xpTotal >= 0 &&
+      data.day is number && data.day >= 1 &&
+      data.money is number &&
+      data.fame is number &&
+      data.decor is number &&
+      data.likes is number && data.likes >= 0 &&
+      data.skinScore is number && data.skinScore >= 0 &&
+      data.skinCount is number && data.skinCount >= 0 &&
+      data.houseLevel is number && data.houseLevel >= 0 &&
+      data.snapshot is map &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    function isValidChatMessage(data) {
+      return data.keys().hasAll([
+        'uid',
+        'playerName',
+        'shopName',
+        'level',
+        'text',
+        'hearts',
+        'createdAt',
+        'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'uid',
+        'playerName',
+        'shopName',
+        'level',
+        'text',
+        'hearts',
+        'createdAt',
+        'updatedAt'
+      ]) &&
+      data.uid is string && data.uid.size() >= 1 && data.uid.size() <= 128 && data.uid.matches('^[a-zA-Z0-9_\\-]+$') &&
+      data.playerName is string && data.playerName.size() >= 1 && data.playerName.size() <= 80 &&
+      data.shopName is string && data.shopName.size() >= 1 && data.shopName.size() <= 80 &&
+      data.level is number && data.level >= 1 && data.level <= 200 &&
+      data.text is string && data.text.size() >= 1 && data.text.size() <= 500 &&
+      data.hearts is number && data.hearts >= 0 &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    // 1. Private Player Saves (/saves/{userId})
+    match /saves/{userId} {
+      allow get: if isSignedIn() && isValidId(userId) && request.auth.uid == userId;
+      allow list: if false;
+
+      allow create: if (
+        isVerifiedUser() &&
+        isValidId(userId) &&
+        userId == request.auth.uid &&
+        isValidCloudSave(incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time
+      );
+
+      allow update: if (
+        isVerifiedUser() &&
+        isValidCloudSave(incoming()) &&
+        isValidId(userId) &&
+        userId == request.auth.uid &&
+        incoming().uid == existing().uid &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        (
+          // Action: SyncSave
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'shopName',
+            'playerName',
+            'revision',
+            'walletSeq',
+            'level',
+            'day',
+            'saveData',
+            'updatedAt'
+          ])
+        )
+      );
+
+      allow delete: if isVerifiedUser() && isValidId(userId) && request.auth.uid == userId;
+    }
+
+    // 2. Public Shop Snapshots & Leaderboards (/shops/{userId})
+    match /shops/{userId} {
+      allow get: if isSignedIn() && isValidId(userId);
+      allow list: if isSignedIn();
+
+      allow create: if (
+        isVerifiedUser() &&
+        isValidId(userId) &&
+        userId == request.auth.uid &&
+        isValidPublicShop(incoming()) &&
+        incoming().uid == request.auth.uid &&
+        incoming().likes == 0 &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time
+      );
+
+      allow update: if (
+        isVerifiedUser() &&
+        isValidPublicShop(incoming()) &&
+        isValidId(userId) &&
+        incoming().uid == existing().uid &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        (
+          // Action: OwnerUpdateShop
+          (
+            userId == request.auth.uid &&
+            incoming().uid == request.auth.uid &&
+            incoming().diff(existing()).affectedKeys().hasOnly([
+              'shopName',
+              'playerName',
+              'level',
+              'xpTotal',
+              'day',
+              'money',
+              'fame',
+              'decor',
+              'skinScore',
+              'skinCount',
+              'houseLevel',
+              'snapshot',
+              'updatedAt'
+            ])
+          ) ||
+          // Action: CommunityLikeShop
+          (
+            userId != request.auth.uid &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['likes', 'updatedAt']) &&
+            incoming().likes == existing().likes + 1
+          )
+        )
+      );
+
+      allow delete: if isVerifiedUser() && isValidId(userId) && request.auth.uid == userId;
+    }
+
+    // 3. World Chat Messages (/chats/{messageId})
+    match /chats/{messageId} {
+      allow get: if isSignedIn() && isValidId(messageId);
+      allow list: if isSignedIn();
+
+      allow create: if (
+        isVerifiedUser() &&
+        isValidId(messageId) &&
+        isValidChatMessage(incoming()) &&
+        incoming().uid == request.auth.uid &&
+        incoming().hearts == 0 &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time
+      );
+
+      allow update: if (
+        isVerifiedUser() &&
+        isValidChatMessage(incoming()) &&
+        isValidId(messageId) &&
+        incoming().uid == existing().uid &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        (
+          // Action: HeartMessage
+          incoming().diff(existing()).affectedKeys().hasOnly(['hearts', 'updatedAt']) &&
+          incoming().hearts == existing().hearts + 1
+        )
+      );
+
+      allow delete: if false;
+    }
+  }
+}

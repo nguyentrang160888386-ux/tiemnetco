@@ -1,0 +1,250 @@
+{
+  "entities": {
+    "CloudSave": {
+      "title": "CloudSave",
+      "description": "Private cloud save state for a player's internet cafe.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Owner Firebase Auth UID.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "shopName": {
+          "type": "string",
+          "description": "Name of the internet cafe.",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "playerName": {
+          "type": "string",
+          "description": "Name of the cafe owner.",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "revision": {
+          "type": "number",
+          "description": "Save revision counter."
+        },
+        "walletSeq": {
+          "type": "number",
+          "description": "Wallet sequence counter."
+        },
+        "level": {
+          "type": "number",
+          "description": "Current shop level."
+        },
+        "day": {
+          "type": "number",
+          "description": "Current in-game day."
+        },
+        "saveData": {
+          "type": "object",
+          "description": "Structured save document map."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp."
+        }
+      },
+      "required": [
+        "uid",
+        "shopName",
+        "playerName",
+        "revision",
+        "walletSeq",
+        "level",
+        "day",
+        "saveData",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "PublicShop": {
+      "title": "PublicShop",
+      "description": "Publicly visible shop leaderboard entry and visitable snapshot (contains no PII).",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Owner Firebase Auth UID.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "shopName": {
+          "type": "string",
+          "description": "Name of the internet cafe.",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "playerName": {
+          "type": "string",
+          "description": "Display name of the player.",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "level": {
+          "type": "number",
+          "description": "Shop level."
+        },
+        "xpTotal": {
+          "type": "number",
+          "description": "Total progression XP."
+        },
+        "day": {
+          "type": "number",
+          "description": "In-game day."
+        },
+        "money": {
+          "type": "number",
+          "description": "Current shop money/assets."
+        },
+        "fame": {
+          "type": "number",
+          "description": "Current shop fame score."
+        },
+        "decor": {
+          "type": "number",
+          "description": "Current shop beauty/decor score."
+        },
+        "likes": {
+          "type": "number",
+          "description": "Total community likes received."
+        },
+        "skinScore": {
+          "type": "number",
+          "description": "Skin collection score."
+        },
+        "skinCount": {
+          "type": "number",
+          "description": "Number of owned skins."
+        },
+        "houseLevel": {
+          "type": "number",
+          "description": "Home lot level."
+        },
+        "snapshot": {
+          "type": "object",
+          "description": "Visitable shop map snapshot."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp."
+        }
+      },
+      "required": [
+        "uid",
+        "shopName",
+        "playerName",
+        "level",
+        "xpTotal",
+        "day",
+        "money",
+        "fame",
+        "decor",
+        "likes",
+        "skinScore",
+        "skinCount",
+        "houseLevel",
+        "snapshot",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "ChatMessage": {
+      "title": "ChatMessage",
+      "description": "Community world chat message.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Author Firebase Auth UID.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "playerName": {
+          "type": "string",
+          "description": "Author display name.",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "shopName": {
+          "type": "string",
+          "description": "Author shop name.",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "level": {
+          "type": "number",
+          "description": "Author shop level."
+        },
+        "text": {
+          "type": "string",
+          "description": "Message text content.",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "hearts": {
+          "type": "number",
+          "description": "Number of heart reactions."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp."
+        }
+      },
+      "required": [
+        "uid",
+        "playerName",
+        "shopName",
+        "level",
+        "text",
+        "hearts",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/saves/{userId}": {
+      "schema": {
+        "$ref": "#/entities/CloudSave"
+      },
+      "description": "Private player cloud save documents."
+    },
+    "/shops/{userId}": {
+      "schema": {
+        "$ref": "#/entities/PublicShop"
+      },
+      "description": "Public shop leaderboard and visitable snapshots."
+    },
+    "/chats/{messageId}": {
+      "schema": {
+        "$ref": "#/entities/ChatMessage"
+      },
+      "description": "World chat messages."
+    }
+  }
+}

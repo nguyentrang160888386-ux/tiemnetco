@@ -1,0 +1,11 @@
+{
+  "projectId": "tiemnetco",
+  "appId": "1:235233587368:web:e30569284621e1e0a4929d",
+  "apiKey": "AIzaSyAMENL0YmwpGR1v9K1j5CmSPZZnSENTdEw",
+  "authDomain": "tiemnetco.firebaseapp.com",
+  "firestoreDatabaseId": "(default)",
+  "storageBucket": "tiemnetco.firebasestorage.app",
+  "messagingSenderId": "235233587368",
+  "measurementId": "G-X92CJCT38C",
+  "databaseURL": "https://tiemnetco-default-rtdb.asia-southeast1.firebasedatabase.app"
+}

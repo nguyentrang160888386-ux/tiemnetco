@@ -1,0 +1,205 @@
+/**
+ * Firestore Security Rules Test Suite (Dirty Dozen Verification)
+ * Verifies all 12 adversarial payloads defined in security_spec.md return PERMISSION_DENIED.
+ */
+
+export interface TestCase {
+  id: number;
+  name: string;
+  collection: string;
+  docId: string;
+  operation: 'get' | 'list' | 'create' | 'update' | 'delete';
+  auth: { uid: string; email_verified: boolean } | null;
+  payload?: Record<string, unknown>;
+  expected: 'PERMISSION_DENIED' | 'ALLOWED';
+}
+
+export const DIRTY_DOZEN_TESTS: TestCase[] = [
+  {
+    id: 1,
+    name: 'Unverified Email Write',
+    collection: 'saves',
+    docId: 'user_1',
+    operation: 'create',
+    auth: { uid: 'user_1', email_verified: false },
+    payload: {
+      uid: 'user_1',
+      shopName: 'Net Co',
+      playerName: 'Chu Quan',
+      revision: 1,
+      walletSeq: 0,
+      level: 1,
+      day: 1,
+      saveData: {},
+      createdAt: 'SERVER_TIME',
+      updatedAt: 'SERVER_TIME',
+    },
+    expected: 'PERMISSION_DENIED',
+  },
+  {
+    id: 2,
+    name: 'Identity Spoofing on Save Create',
+    collection: 'saves',
+    docId: 'user_1',
+    operation: 'create',
+    auth: { uid: 'user_1', email_verified: true },
+    payload: {
+      uid: 'user_2',
+      shopName: 'Net Co',
+      playerName: 'Chu Quan',
+      revision: 1,
+      walletSeq: 0,
+      level: 1,
+      day: 1,
+      saveData: {},
+      createdAt: 'SERVER_TIME',
+      updatedAt: 'SERVER_TIME',
+    },
+    expected: 'PERMISSION_DENIED',
+  },
+  {
+    id: 3,
+    name: 'Cross-User Save Read',
+    collection: 'saves',
+    docId: 'user_1',
+    operation: 'get',
+    auth: { uid: 'user_2', email_verified: true },
+    expected: 'PERMISSION_DENIED',
+  },
+  {
+    id: 4,
+    name: 'Shadow Field Injection on Save Create',
+    collection: 'saves',
+    docId: 'user_1',
+    operation: 'create',
+    auth: { uid: 'user_1', email_verified: true },
+    payload: {
+      uid: 'user_1',
+      shopName: 'Net Co',
+      playerName: 'Chu Quan',
+      revision: 1,
+      walletSeq: 0,
+      level: 1,
+      day: 1,
+      saveData: {},
+      isAdmin: true,
+      createdAt: 'SERVER_TIME',
+      updatedAt: 'SERVER_TIME',
+    },
+    expected: 'PERMISSION_DENIED',
+  },
+  {
+    id: 5,
+    name: 'Immutable Field Mutation (createdAt)',
+    collection: 'saves',
+    docId: 'user_1',
+    operation: 'update',
+    auth: { uid: 'user_1', email_verified: true },
+    payload: {
+      createdAt: 'FORGED_NEW_TIME',
+      updatedAt: 'SERVER_TIME',
+    },
+    expected: 'PERMISSION_DENIED',
+  },
+  {
+    id: 6,
+    name: 'Client Timestamp Spoofing (updatedAt)',
+    collection: 'saves',
+    docId: 'user_1',
+    operation: 'update',
+    auth: { uid: 'user_1', email_verified: true },
+    payload: {
+      revision: 2,
+      updatedAt: '2099-01-01T00:00:00Z',
+    },
+    expected: 'PERMISSION_DENIED',
+  },
+  {
+    id: 7,
+    name: 'Denial-of-Wallet Oversized String',
+    collection: 'saves',
+    docId: 'user_1',
+    operation: 'create',
+    auth: { uid: 'user_1', email_verified: true },
+    payload: {
+      uid: 'user_1',
+      shopName: 'A'.repeat(500),
+      playerName: 'Chu Quan',
+      revision: 1,
+      walletSeq: 0,
+      level: 1,
+      day: 1,
+      saveData: {},
+      createdAt: 'SERVER_TIME',
+      updatedAt: 'SERVER_TIME',
+    },
+    expected: 'PERMISSION_DENIED',
+  },
+  {
+    id: 8,
+    name: 'ID Poisoning Attack',
+    collection: 'chats',
+    docId: 'invalid$id!with@spaces',
+    operation: 'create',
+    auth: { uid: 'user_1', email_verified: true },
+    payload: {
+      uid: 'user_1',
+      playerName: 'Chu Quan',
+      shopName: 'Net Co',
+      level: 1,
+      text: 'Xin chao',
+      hearts: 0,
+      createdAt: 'SERVER_TIME',
+      updatedAt: 'SERVER_TIME',
+    },
+    expected: 'PERMISSION_DENIED',
+  },
+  {
+    id: 9,
+    name: 'Unauthorized Shop Tampering',
+    collection: 'shops',
+    docId: 'user_1',
+    operation: 'update',
+    auth: { uid: 'user_2', email_verified: true },
+    payload: {
+      money: 999999999,
+      updatedAt: 'SERVER_TIME',
+    },
+    expected: 'PERMISSION_DENIED',
+  },
+  {
+    id: 10,
+    name: 'Arbitrary Like Inflation',
+    collection: 'shops',
+    docId: 'user_1',
+    operation: 'update',
+    auth: { uid: 'user_2', email_verified: true },
+    payload: {
+      likes: 100,
+      updatedAt: 'SERVER_TIME',
+    },
+    expected: 'PERMISSION_DENIED',
+  },
+  {
+    id: 11,
+    name: 'Chat Message Content Tampering',
+    collection: 'chats',
+    docId: 'msg_1',
+    operation: 'update',
+    auth: { uid: 'user_1', email_verified: true },
+    payload: {
+      text: 'Edited text',
+      updatedAt: 'SERVER_TIME',
+    },
+    expected: 'PERMISSION_DENIED',
+  },
+  {
+    id: 12,
+    name: 'Unauthenticated List Scraping',
+    collection: 'shops',
+    docId: '*',
+    operation: 'list',
+    auth: null,
+    expected: 'PERMISSION_DENIED',
+  },
+];

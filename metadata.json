@@ -1,0 +1,6 @@
+{
+  "name": "Tiệm Nét Cỏ – Ông Chủ Quán Nét",
+  "description": "Game quản lý quán net pixel art: từ net cỏ 4 máy thành cyber game lớn nhất khu phố, tích hợp lưu đám mây và bảng xếp hạng qua Firebase.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

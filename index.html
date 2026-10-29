@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#1a1420" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Tiệm Nét Cỏ" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <title>Tiệm Nét Cỏ – Ông Chủ Quán Nét</title>
+    <meta
+      name="description"
+      content="Game quản lý quán net pixel art: từ net cỏ 4 máy thành cyber game lớn nhất khu phố, tích hợp lưu đám mây và bảng xếp hạng qua Firebase."
+    />
+    <meta property="og:title" content="Tiệm Nét Cỏ – Ông Chủ Quán Nét" />
+    <meta
+      property="og:description"
+      content="Game quản lý quán net pixel art: từ net cỏ 4 máy thành cyber game lớn nhất khu phố, tích hợp lưu đám mây và bảng xếp hạng qua Firebase."
+    />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" href="/favicon.ico" sizes="192x192" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=VT323&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/css/app-229acac98a0d728a.css" />
+    <link rel="stylesheet" href="/css/ls-guild.css?v=gnews1019" />
+    <link rel="stylesheet" href="/css/ls-guild-fund.css?v=fund1027" />
+    <link rel="stylesheet" href="/css/quiz.css?v=4" />
+    <link rel="stylesheet" href="/css/draw.css?v=2" />
+    <link rel="stylesheet" href="/css/contest-v1.css?v=6" />
+  </head>
+  <body>
+    <canvas id="game"></canvas>
+    <!-- HUD trên: 1 thanh thống nhất (ngang: 1 hàng · dọc: 2 hàng) -->
+    <div id="hud" hidden>
+      <div id="hud-daybox" class="hud-time">
+        <span class="hud-day"><b id="hud-day">NGÀY 1</b> · <span id="hud-dayname">Thứ 2</span></span>
+        <span id="hud-clock" class="hud-clock num">07:00</span>
+      </div>
+      <div id="hud-stage" class="hud-shop"></div>
+      <div id="hud-money" class="hud-money">
+        <span class="ic"></span><span id="hud-money-v" class="num">0đ</span><i id="save-dot" title="Đã lưu trên máy"></i>
+      </div>
+      <button
+        type="button"
+        id="hud-coupon"
+        class="hud-coupon"
+        aria-label="Coupon: 0. Bấm để mở Giao diện quán"
+        title="Coupon · đổi skin quán"
+      >
+        <svg viewBox="0 0 16 12" width="20" height="15" aria-hidden="true" shape-rendering="crispEdges">
+          <path fill="#16504a" d="M1 1h14v3h-1v4h1v3H1V8h1V4H1z" />
+          <path fill="#7fe0d0" d="M2 2h12v2h-1v4h1v2H2V8h1V4H2z" />
+          <path fill="#16504a" d="M5 2h1v8H5z" opacity=".45" />
+          <path fill="#ffe066" d="M8 4h4v4H8z" />
+        </svg>
+        <span id="hud-coupon-v" class="num">0</span>
+      </button>
+      <div class="hud-stats">
+        <button type="button" id="hud-rating" class="hud-stat" data-hud-stat="rating" aria-label="Đánh giá">
+          <span class="ic"></span><span id="hud-rating-v" class="num">3.0</span><span id="hud-stars" class="stars"></span>
+        </button>
+        <button type="button" id="hud-fame" class="hud-stat" data-hud-stat="fame" aria-label="Danh tiếng">
+          <span class="ic"></span><span id="hud-fame-v" class="num">0</span>
+        </button>
+        <button type="button" id="hud-beauty" class="hud-stat" data-hud-stat="beauty" aria-label="Độ đẹp">
+          <span class="ic"></span><span id="hud-beauty-v" class="num">0</span>
+        </button>
+        <div id="hud-status" class="hud-status">
+          <button type="button" id="hud-ping" class="st" data-hud-stat="ping" aria-label="Ping mạng">
+            <span class="ic"></span><span id="hud-ping-v">45</span><span class="u">ms</span>
+          </button>
+          <button type="button" id="hud-temp" class="st" data-hud-stat="temp" aria-label="Nhiệt độ">
+            <span class="ic"></span><span id="hud-temp-v">30°C</span>
+          </button>
+          <button type="button" id="hud-power" class="st" data-hud-stat="power" aria-label="Tải điện">
+            <span class="ic"></span><span id="hud-power-v">0/8</span>
+          </button>
+        </div>
+      </div>
+      <button id="btn-sound" class="hud-btn hud-icon" title="Âm thanh" data-ic="sound"></button>
+      <button id="btn-music" class="hud-btn hud-icon" title="Nhạc nền" data-ic="music"></button>
+      <button id="btn-menu" class="hud-btn hud-icon" title="Menu" data-ic="menu"></button>
+    </div>
+    <div id="hud-events" class="events"></div>
+    <nav id="floor-nav" aria-label="Chuyển tầng" hidden></nav>
+    <button type="button" id="shop-hub" aria-label="Chủ đề quán: skin, nhiệm vụ, thử thách" hidden>
+      <svg class="hub-ic" viewBox="0 0 12 12" shape-rendering="crispEdges" aria-hidden="true">
+        <path fill="#2b1740" d="M3 0h6v1h2v1h1v6h-1v1H9V8H7v2H6v1H5v1H3v-1H1v-1H0V3h1V1h2z" />
+        <path fill="#f6dcb0" d="M3 1h6v1h2v6h-1V7H7v1H6v2H5v1H3v-1H1V3h1V2h1z" />
+        <path fill="#e8475a" d="M3 3h2v2H3z" />
+        <path fill="#4a8ec0" d="M6 2h2v2H6z" />
+        <path fill="#78a862" d="M9 4h1v2H9z" />
+        <path fill="#f0cc6a" d="M2 6h2v2H2z" />
+      </svg>
+      <b>Chủ đề</b>
+    </button>
+    <div id="pause-banner" hidden>TẠM DỪNG</div>
+    <div id="quest-tracker" hidden></div>
+    <div id="toasts"></div>
+    <!-- Menu dưới -->
+    <div id="bottom-bar" hidden></div>
+    <div id="build-bar" hidden></div>
+    <!-- Panel phải -->
+    <div id="panel" hidden>
+      <div class="panel-head">
+        <h2 id="panel-title"></h2>
+        <button
+          id="panel-profile"
+          class="panel-profile-btn"
+          data-act="my-profile"
+          data-ic="user"
+          data-label="HỒ SƠ"
+          title="Mở hồ sơ của tôi"
+          hidden
+        ></button>
+        <button id="panel-close" aria-label="Đóng bảng quản lý" class="pp-x" data-ic="close"></button>
+      </div>
+      <div id="panel-tabs" class="panel-tabs"></div>
+      <div id="panel-body" class="panel-body"></div>
+    </div>
+    <div id="zoom-ctrl" hidden></div>
+    <div id="side-actions" hidden aria-label="Tác vụ nhanh"></div>
+    <button id="btn-chat" class="hud-btn" title="Mở Chat và Khoản vay" aria-label="Mở Chat và Khoản vay" hidden></button>
+    <button id="btn-store" class="hud-btn" title="Cửa hàng" aria-label="Cửa hàng" hidden></button>
+    <div id="popup" hidden></div>
+    <div id="modal-layer" hidden></div>
+    <!-- Tutorial -->
+    <div id="coach" hidden>
+      <img class="coach-av" alt="" />
+      <div class="coach-main">
+        <div class="coach-chap"><b></b><span class="coach-dots" aria-hidden="true"></span></div>
+        <div class="coach-text"></div>
+      </div>
+      <div class="coach-btns">
+        <button id="coach-skip" class="link-btn" aria-label="Bỏ qua hướng dẫn">Bỏ qua</button>
+        <button id="coach-next" class="btn btn-green"></button>
+      </div>
+    </div>
+    <div id="coach-arrow" hidden>▼</div>
+    <!-- Màn hình chính -->
+    <div id="title-screen">
+      <div class="title-box">
+        <div class="logo">
+          <div class="logo-sub">ÔNG CHỦ QUÁN NÉT</div>
+          <div class="logo-main">TIỆM NÉT CỎ</div>
+          <div class="title-version" aria-label="Phiên bản v2.4">v2.4</div>
+        </div>
+        <div class="title-btns">
+          <div id="online-auth" class="online-auth">
+            <div class="online-auth-title">
+              <span class="online-pulse"></span>
+              <div><b>TÀI KHOẢN ONLINE</b></div>
+            </div>
+            <div id="online-status" class="online-status">Đăng nhập Google để mở quán mới</div>
+            <div class="online-auth-actions">
+              <button id="online-google" class="btn btn-blue small">ĐĂNG NHẬP GOOGLE</button>
+              <div id="online-identity" class="online-identity" hidden>
+                <span>✓</span>
+                <div>
+                  <b id="online-account-name">Đã kết nối</b>
+                  <small id="online-account-kind">Cloud an toàn</small>
+                </div>
+              </div>
+              <button id="online-logout" class="link-btn" hidden>Đăng xuất / đổi tài khoản</button>
+            </div>
+          </div>
+          <button id="t-continue" class="btn btn-green big" data-ic="play" data-label="TIẾP TỤC" disabled>TIẾP TỤC</button>
+          <div id="t-save-info" class="save-info">Chưa có dữ liệu lưu</div>
+          <button id="t-new" class="btn btn-orange big" data-ic="star" data-label="GAME MỚI" disabled>GAME MỚI</button>
+          <div class="t-links">
+            <a
+              id="t-community"
+              class="btn btn-blue small community-btn"
+              href="https://www.facebook.com/share/g/18NEtZqhFd/?mibextid=wwXIfr"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Mở cộng đồng Tiệm Nét Cỏ trên Facebook"
+              title="Mở cộng đồng Facebook trong tab mới"
+            >
+              <svg class="community-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path
+                  d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073c0 6.019 4.388 11.012 10.125 11.854v-8.385H7.078v-3.469h3.047V9.429c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.236 2.686.236v2.98h-1.513c-1.491 0-1.956.932-1.956 1.888v2.237h3.328l-.532 3.469h-2.796v8.385C19.612 23.085 24 18.092 24 12.073Z"
+                />
+              </svg>
+              <span>Cộng đồng</span>
+            </a>
+          </div>
+          <div class="t-links">
+            <button id="t-install" class="btn btn-yellow small" aria-label="Cài game vào máy">CÀI GAME</button>
+          </div>
+          <div class="t-links">
+            <button id="t-app-update" class="btn btn-blue small">Cập nhật</button>
+            <button id="t-app-reload" class="btn btn-orange small">Tải lại</button>
+          </div>
+          <button id="t-delete" class="btn btn-gray small t-delete" data-ic="close" data-label="XÓA SAVE">XÓA SAVE</button>
+        </div>
+      </div>
+    </div>
+    <div id="root" hidden></div>
+    <script>
+      window.RenderHooks = { outLeft: 24, panLeft: 24 };
+    </script>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
